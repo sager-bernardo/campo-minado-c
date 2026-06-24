@@ -1,0 +1,153 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int tela [9][9] = {0};
+int visaoJogador [9][9] = {0};
+int jogoAtivo = 1;
+int verificaVitoria();
+void revelaVazios(int linha, int coluna);
+
+void inicializarTela(){
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            tela[i][j] = 0;
+            visaoJogador[i][j] = 0;
+        }
+    }
+
+    int bombas = 0;  
+    while (bombas < 10) {
+        int linha  = rand() % 9; 
+        int coluna = rand() % 9; 
+        if (tela[linha][coluna] != -1) { 
+            tela[linha][coluna] = -1; 
+            bombas++; 
+        }
+    } 
+    for (int i = 0; i < 9; i++) {
+        for (int j = 0; j < 9; j++) {
+            if (tela[i][j] == -1) continue;
+                int contBombas = 0;
+        for (int di = -1; di <= 1; di++) {
+            for (int dj = -1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) {
+                    continue;
+                }
+                    int ni = i + di;
+                    int nj = j + dj;
+                if (ni >= 0 && ni < 9 && nj >= 0 && nj < 9) {
+                    if (tela[ni][nj] == -1) contBombas++;
+                }
+            }
+        }
+            tela[i][j] = contBombas;
+        }
+    }
+}
+
+void imprimirTelaJogador(){
+    printf("     ");
+    for (int j = 0; j < 9; j++) printf("%2d ", j);
+    printf("\n\n");
+    for (int i = 0; i < 9; i++){
+        printf("%2d   ", i);
+        for (int j = 0; j < 9; j++){
+            if (visaoJogador[i][j] == 0){
+                printf(" X ");
+            } else {
+                printf("%2d ", tela[i][j]);
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void imprimirTelaOriginal(){
+    printf("     ");
+    for (int j = 0; j < 9; j++) printf("%2d ", j);
+    printf("\n\n");
+    for (int i = 0; i < 9; i++){
+        printf("%2d   ", i);
+        for (int j = 0; j < 9; j++){
+            printf("%2d ", tela[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void posicaoEscolhida(int linha, int coluna){
+    if (tela[linha][coluna] == -1){
+        imprimirTelaOriginal();
+        printf("Voce perdeu!\n");
+        jogoAtivo = 0;
+    } else {
+        revelaVazios(linha, coluna);
+        imprimirTelaJogador();
+        if (verificaVitoria()){
+            printf("Voce ganhou!\n");
+            jogoAtivo = 0;
+        }
+    }
+}
+
+int verificaVitoria(){
+    for (int i = 0; i < 9; i++){
+        for (int j = 0; j < 9; j++){
+            if (tela[i][j] != -1 && visaoJogador[i][j] == 0){
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+void revelaVazios(int linha, int coluna){
+    if (linha < 0 || linha >= 9 || coluna < 0 || coluna >= 9) return;
+    if (visaoJogador[linha][coluna] == 1) return;
+    if (tela[linha][coluna] == -1) return;
+
+    visaoJogador[linha][coluna] = 1;
+
+    if (tela[linha][coluna] == 0){
+        for (int di = -1; di <= 1; di++){
+            for (int dj = -1; dj <= 1; dj++){
+                if (di == 0 && dj == 0) continue;
+                revelaVazios(linha + di, coluna + dj);
+            }
+        }   
+    }
+}
+
+int main(){
+    srand(time(NULL));
+    char jogarNovamente;
+    do {
+        jogoAtivo = 1;
+        inicializarTela();
+        imprimirTelaJogador();
+        
+        while (jogoAtivo){
+            int linha, coluna;
+            printf("Digite a linha desejada (0 a 8): ");
+            scanf("%d", &linha);
+            printf("Digite a coluna desejada (0 a 8): ");
+            scanf("%d", &coluna);
+            if (linha < 0 || linha > 8 || coluna < 0 || coluna > 8){
+                printf("Posicao invalida! Digite valores entre 0 e 8.\n");
+                continue;
+            }
+            if (visaoJogador[linha][coluna] == 1){
+                printf("Posicao ja revelada! Escolha outra.\n");
+                continue;
+            }
+            posicaoEscolhida(linha, coluna);
+        }
+        
+        printf("Jogar novamente? (s/n): ");
+        scanf(" %c", &jogarNovamente);
+    } while (jogarNovamente == 's' || jogarNovamente == 'S');
+
+    return 0;
+}
